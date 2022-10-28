@@ -28,6 +28,10 @@ public class Matrix {
     public interface RowColValueConsumer{
         void consumer(int row, int col, double value);
     }
+
+    public interface RowColIndexValueConsumer{
+        void consumer(int row, int col, int index, double value);
+    }
     private double[] a;
     public Matrix(int rows, int cols){
         this.rows = rows;
@@ -40,6 +44,15 @@ public class Matrix {
             a[i] = producer.produce(a[i]);
         }
         return this;
+    }
+
+    public void forEach(RowColIndexValueConsumer consumer){
+        int index = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                consumer.consumer(i, j, index,a[index++]);
+            }
+        }
     }
     public void forEach(RowColValueConsumer consumer){
         int index = 0;

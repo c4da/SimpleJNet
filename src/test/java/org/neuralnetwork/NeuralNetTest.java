@@ -11,6 +11,19 @@ public class NeuralNetTest extends TestCase {
     private Random random = new Random();
 
     @Test
+    public void testApproximator(){
+        final int rows = 4;
+        final int cols = 5;
+        Matrix input = new Matrix(rows, cols, i-> random.nextGaussian());
+
+        Approximator.gradient(input, null);
+
+        System.out.println();
+        System.out.println(input);
+
+    }
+
+    @Test
     public void testTemp(){
 
         int inputSize = 5;
@@ -49,6 +62,25 @@ public class NeuralNetTest extends TestCase {
     }
 
     @Test
+    public void testCrossEntropy(){
+        double[] expectedValues = {1, 0, 0, 0, 0, 1, 0, 1, 0};
+        Matrix expected = new Matrix(3, 3, i -> expectedValues[i]);
+
+        Matrix actual = new Matrix(3, 3, i -> (0.05 * i * i)).softMax();
+
+        Matrix result = LossFunction.crossEntropy(expected, actual);
+
+        actual.forEach((row, col, index, value) -> {
+            double expectedValue = expected.get(index);
+            double loss = result.get(col);
+            if (expectedValue > 0.9){
+                assertTrue(Math.abs(Math.log(value) + loss) < 0.001d);
+            }
+
+        });
+    }
+
+//    @Test
     public void testEngine(){
         Engine engine = new Engine();
 
