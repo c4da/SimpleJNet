@@ -11,6 +11,24 @@ public class MatrixTest {
     private Random random = new Random();
 
     @Test
+    public void testSetValue(){
+        int rows = 8;
+        int cols = 8;
+        Matrix m = new Matrix(rows, cols, i -> 1);
+        System.out.println(m);
+
+        for (int i = 0; i < rows; i++) {
+            m.set(i, 0, 0);
+        }
+
+        System.out.println(m);
+        for (int i = 0; i < rows; i++) {
+            int col = 0;
+            assertTrue(m.get(i * cols + col) == 0);
+        }
+    }
+
+    @Test
     public void testSoftMax(){
         Matrix m = new Matrix(5, 8, i -> random.nextGaussian());
         Matrix result = m.softMax();

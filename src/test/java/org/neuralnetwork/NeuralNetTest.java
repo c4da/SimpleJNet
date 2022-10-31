@@ -15,12 +15,20 @@ public class NeuralNetTest extends TestCase {
         final int rows = 4;
         final int cols = 5;
         Matrix input = new Matrix(rows, cols, i-> random.nextGaussian());
+        Matrix expected = new Matrix(rows, cols, i -> 0);
 
-        Approximator.gradient(input, null);
+        for (int col = 0; col < expected.getCols(); col++) {
+            int randomRow = random.nextInt(rows);
+            expected.set(randomRow, col, 1);
+        }
+        Approximator.gradient(input, in->{
+            return LossFunction.crossEntropy(expected, in);
+        });
 
         System.out.println();
         System.out.println(input);
 
+        System.out.println(expected);
     }
 
     @Test

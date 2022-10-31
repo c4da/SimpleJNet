@@ -148,6 +148,10 @@ public class Matrix {
         return result;
     }
 
+    public void set(int row, int col, double value){
+        a[row * cols + col] = value;
+    }
+
     public double get(int index){
         return a[index];
     }
