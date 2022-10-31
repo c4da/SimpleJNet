@@ -11,24 +11,40 @@ public class NeuralNetTest extends TestCase {
     private Random random = new Random();
 
     @Test
+    public void testAddIncrement(){
+        Matrix m = new Matrix(5, 8, i -> random.nextGaussian());
+
+        int row = 3;
+        int col = 2;
+        double inc = 10;
+
+        Matrix result = m.addIncrement(row, col, inc);
+
+        double originalValue = m.get(row, col);
+        double incrementedValue = result.get(row, col);
+        assertTrue(Math.abs(incrementedValue - (originalValue + inc)) < 0.001);
+
+        System.out.println(m);
+        System.out.println(result);
+    }
+
+    @Test
     public void testApproximator(){
         final int rows = 4;
         final int cols = 5;
-        Matrix input = new Matrix(rows, cols, i-> random.nextGaussian());
+        Matrix input = new Matrix(rows, cols, i-> random.nextGaussian()).softMax();
         Matrix expected = new Matrix(rows, cols, i -> 0);
 
         for (int col = 0; col < expected.getCols(); col++) {
             int randomRow = random.nextInt(rows);
             expected.set(randomRow, col, 1);
         }
-        Approximator.gradient(input, in->{
+
+        Matrix result = Approximator.gradient(input, in -> {
             return LossFunction.crossEntropy(expected, in);
         });
 
-        System.out.println();
-        System.out.println(input);
-
-        System.out.println(expected);
+        System.out.println(result);
     }
 
     @Test
