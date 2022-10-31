@@ -14,6 +14,14 @@ public class Calculus {
         return x * x;
     }
 
+    public static double func3(double y1, double y2) {
+        return y1 * y2 + 4.7 * y1;
+    }
+
+    public static double func4(double x) {
+        return func1(x) * func2(x) + 4.7 * func1(x);
+    }
+
     public static double differentiate(DoubleFunction<Double> func, double x){
 
         double output1 = func.apply(x);
@@ -23,10 +31,19 @@ public class Calculus {
     }
 
     public static void main(String[] args) {
-        for (double x = -2; x < 2; x += 0.1){
-            double gradient = differentiate(Calculus::func1, x);
-            System.out.printf("%.2f\t%.2f\n", x, gradient);
-        }
+        double x = 2.76;
+        double y1 = func1(x);
+        double y2 = func2(x);
+        double z = func3(y1, y2);
+
+        double dy1dx = differentiate(Calculus::func1, x);
+        double dy2dx = differentiate(Calculus::func2, x);
+        double dzdy1 = differentiate(y->func3(y, y2), y1);
+        double dzdy2 = differentiate(y->func3(y1, y), y2);
+
+        double dzdxCalculated = dzdy1 * dy1dx + dzdy2 * dy2dx;
+        double dzdxApproximated = differentiate(Calculus::func4, x);
+
     }
 
 }
