@@ -9,25 +9,74 @@ public class Engine {
     private LinkedList<Transform> transforms = new LinkedList<>();
     private LinkedList<Matrix> weights = new LinkedList<>();
     private LinkedList<Matrix> biases = new LinkedList<>();
+    private LossFunction lossFunction = LossFunction.CROSS_ENTROPY;
 
-    Matrix runForwards(Matrix input){
+    public boolean isStoreInputError() {
+        return storeInputError;
+    }
+
+    public void setStoreInputError(boolean storeInputError) {
+        this.storeInputError = storeInputError;
+    }
+
+    private boolean storeInputError = false;
+
+    public BatchResult runForwards(Matrix input){
+        BatchResult batchResult = new BatchResult();
         Matrix output = input;
+        batchResult.addIo(output);
         int denseIndex = 0;
         for (Transform t : transforms) {
-            if (t == Transform.DENSE){
+            if (t == Transform.DENSE) {
                 Matrix weight = weights.get(denseIndex);
                 Matrix bias = biases.get(denseIndex);
                 output = weight.multiply(output).modify((row, col, value) -> value + bias.get(row));;
                 ++denseIndex;
-
-            } else if (t == Transform.RELU){
+            } else if (t == Transform.RELU) {
                 output = output.modify(value -> value > 0 ? value : 0);
-            } else if (t == Transform.SOFTMAX){
+            } else if (t == Transform.SOFTMAX) {
                 output = output.softMax();
             }
+            batchResult.addIo(output);
+        }
+        return batchResult;
+    }
+
+    public void runBackwards(BatchResult batchResult, Matrix expected){
+
+        var transformsIterator = transforms.descendingIterator();
+
+        if (lossFunction != LossFunction.CROSS_ENTROPY || transforms.getLast() != Transform.SOFTMAX){
+            throw new UnsupportedOperationException("Loss fun. must be cross entropy and last transform must be softmax.");
         }
 
-        return output;
+        var ioIt = batchResult.getIo().descendingIterator();
+        var weightIterator = weights.descendingIterator();
+        Matrix softMaxOutput = ioIt.next();
+        Matrix error = softMaxOutput.apply((index, value) -> value - expected.get(index));
+
+        while (transformsIterator.hasNext()){
+            Transform transform = transformsIterator.next();
+            Matrix input = ioIt.next();
+            switch (transform) {
+                case DENSE:
+                    Matrix weight = weightIterator.next();
+                    if (weightIterator.hasNext() || storeInputError) {
+                        error = weight.transpose().multiply(error);
+                    }
+                    break;
+                case RELU:
+                    error = error.apply((index, value) -> input.get(index) > 0 ? value : 0);
+                    break;
+                case SOFTMAX:
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not Implemented");
+            }
+        }
+        if (storeInputError){
+            batchResult.setInputError(error);
+        }
     }
 
     public void add(Transform transform, double... params){

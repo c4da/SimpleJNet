@@ -11,6 +11,92 @@ public class NeuralNetTest extends TestCase {
     private Random random = new Random();
 
     @Test
+    public void testEngine(){
+
+        var inputRows = 5;
+        var cols = 6;
+        var outputRows = 5;
+
+        Engine engine = new Engine();
+
+        engine.add(Transform.DENSE, 8, 5);
+//        engine.add(Transform.RELU);
+        engine.add(Transform.DENSE, 5);
+//        engine.add(Transform.RELU);
+        engine.add(Transform.DENSE, 4);
+
+        engine.add(Transform.SOFTMAX);
+        engine.setStoreInputError(true);
+
+        Matrix input = Util.generateInputMatrix(inputRows, cols);
+        Matrix expected = Util.generateExpectedMatrix(outputRows, cols);
+
+        Matrix approximatedError = Approximator.gradient(input, in -> {
+            BatchResult output = engine.runForwards(in);
+            return LossFunctions.crossEntropy(expected, output.getOutput());
+        });
+
+        BatchResult batchResult = engine.runForwards(input);
+        engine.runBackwards( batchResult, expected);
+
+        Matrix calculatedError = batchResult.getInputError();
+
+        System.out.println(calculatedError);
+        System.out.println(approximatedError);
+
+        calculatedError.setTolerance(1e-3);
+        assertTrue(calculatedError.equals(approximatedError));
+    }
+
+    @Test
+    public void testBackprop(){
+
+        interface NeuralNet {
+            Matrix apply(Matrix m);
+        }
+
+        final int inputRows = 4;
+        final int cols = 5;
+        final int outputRows = 4;
+
+        Matrix input = new Matrix(inputRows, cols, i-> random.nextGaussian()).softMax();
+        Matrix expected = new Matrix(outputRows, cols, i -> 0);
+
+        for (int col = 0; col < expected.getCols(); col++) {
+            int randomRow = random.nextInt(outputRows);
+            expected.set(randomRow, col, 1);
+        }
+
+        Matrix weights = new Matrix(outputRows, inputRows, i -> random.nextGaussian());
+        Matrix biases = new Matrix(outputRows, 1, i -> random.nextGaussian());
+
+        NeuralNet neuralNet = m -> {
+            Matrix out = m.apply((index, value) -> value > 0 ? value : 0);
+            out = weights.multiply(out); //apply weights
+            out = out.modify((row, col, value)->value+biases.get(row)); //add biases
+            out = out.softMax(); //apply softmax
+            return out;
+        };
+
+        //Little neural network with only one layer - forward pass
+        Matrix softMaxOutput = neuralNet.apply(input);
+
+        Matrix approximatedResult = Approximator.gradient(input, in -> {
+            Matrix out = neuralNet.apply(in);
+            return LossFunctions.crossEntropy(expected, out);
+        });
+
+        Matrix calculatedResult = softMaxOutput.apply((index, value) -> value - expected.get(index));
+
+        //backwards pass - backpropagation
+        calculatedResult = weights.transpose().multiply(calculatedResult);
+        calculatedResult = calculatedResult.apply((index, value) -> input.get(index) > 0 ? value : 0);
+
+        assertTrue(approximatedResult.equals(calculatedResult));
+
+    }
+
+    @Test
     public void testSoftMaxCrossEntropyGradient(){
         final int rows = 4;
         final int cols = 5;
@@ -26,7 +112,7 @@ public class NeuralNetTest extends TestCase {
 
 
         Matrix result = Approximator.gradient(input, in -> {
-            return LossFunction.crossEntropy(expected, in.softMax());
+            return LossFunctions.crossEntropy(expected, in.softMax());
         });
 
         result.forEach((index, value) -> {
@@ -67,7 +153,7 @@ public class NeuralNetTest extends TestCase {
         }
 
         Matrix result = Approximator.gradient(input, in -> {
-            return LossFunction.crossEntropy(expected, in);
+            return LossFunctions.crossEntropy(expected, in);
         });
 
         input.forEach((index, value) ->{
@@ -129,7 +215,7 @@ public class NeuralNetTest extends TestCase {
 
         Matrix actual = new Matrix(3, 3, i -> (0.05 * i * i)).softMax();
 
-        Matrix result = LossFunction.crossEntropy(expected, actual);
+        Matrix result = LossFunctions.crossEntropy(expected, actual);
 
         actual.forEach((row, col, index, value) -> {
             double expectedValue = expected.get(index);
@@ -139,26 +225,6 @@ public class NeuralNetTest extends TestCase {
             }
 
         });
-    }
-
-//    @Test
-    public void testEngine(){
-        Engine engine = new Engine();
-
-        engine.add(Transform.DENSE, 8, 5);
-        engine.add(Transform.RELU);
-
-        engine.add(Transform.DENSE, 5);
-        engine.add(Transform.RELU);
-
-        engine.add(Transform.DENSE, 4);
-        engine.add(Transform.SOFTMAX);
-        
-        Matrix input = new Matrix(5, 1, i->random.nextGaussian());
-        Matrix output = engine.runForwards(input);
-
-        System.out.println(engine);
-        System.out.println(output);
     }
 
     @Test
@@ -178,6 +244,7 @@ public class NeuralNetTest extends TestCase {
     }
     @Test
     public void testRELU(){
+
         final int numberNeurons = 5;
         final int numberInputs = 6;
         final int inputSize = 4;
@@ -187,8 +254,7 @@ public class NeuralNetTest extends TestCase {
         Matrix biases = new Matrix(numberNeurons, 1, i -> random.nextGaussian());
 
         Matrix result1 = weights.multiply(input).modify((row, col, value) -> value + biases.get(row));
-        Matrix result2 = weights.multiply(input).modify((row, col, value) -> value + biases.get(row))
-                .modify(value -> value > 0 ? value : 0);
+        Matrix result2 = weights.multiply(input).modify((row, col, value) -> value + biases.get(row)).modify(value -> value > 0 ? value : 0);
 
         result2.forEach((index, value)->{
             double originalValue = result1.get(index);

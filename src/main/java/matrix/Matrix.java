@@ -4,7 +4,12 @@ import java.util.Arrays;
 
 public class Matrix {
     private static final String NUMBER_FORMAT = "%+12.5f ";
-    private static final double TOLERANCE = 1e-6;
+
+    public void setTolerance(double tolerance) {
+        this.tolerance = tolerance;
+    }
+
+    private double tolerance = 1e-6;
     private final int rows;
     private final int cols;
     public interface Producer{
@@ -194,7 +199,7 @@ public class Matrix {
         }
         Matrix other = (Matrix) o;
         for (int i = 0; i < a.length; i++) {
-            if (Math.abs(a[i] - other.a[i]) > TOLERANCE){
+            if (Math.abs(a[i] - other.a[i]) > tolerance){
                 return false;
             }
         }
