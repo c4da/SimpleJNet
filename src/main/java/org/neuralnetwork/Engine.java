@@ -21,6 +21,29 @@ public class Engine {
 
     private boolean storeInputError = false;
 
+    public void evaluate(BatchResult batchResult, Matrix expected){
+        if (lossFunction != LossFunction.CROSS_ENTROPY){
+            throw new UnsupportedOperationException("Only Cross Entropy is supported.");
+        }
+        double loss = LossFunctions.crossEntropy(expected, batchResult.getOutput()).averageColumn().get(0);
+        batchResult.setLoss(loss);
+
+        Matrix predictions = batchResult.getOutput().getGreatestRowNumbers();
+        Matrix actual = expected.getGreatestRowNumbers();
+
+        int correct = 0;
+
+        for (int i = 0; i < actual.getCols(); i++) {
+            if ((int) actual.get(i) == (int) predictions.get(i)){
+                ++correct;
+            }
+        }
+
+        double percentCorrect = (100.0 * correct) / actual.getCols();
+        batchResult.setPercentCorrect(percentCorrect);
+
+    }
+
     public BatchResult runForwards(Matrix input){
         BatchResult batchResult = new BatchResult();
         Matrix output = input;
@@ -28,6 +51,7 @@ public class Engine {
         int denseIndex = 0;
         for (Transform t : transforms) {
             if (t == Transform.DENSE) {
+                batchResult.addWeightInput(output);
                 Matrix weight = weights.get(denseIndex);
                 Matrix bias = biases.get(denseIndex);
                 output = weight.multiply(output).modify((row, col, value) -> value + bias.get(row));;
@@ -40,6 +64,29 @@ public class Engine {
             batchResult.addIo(output);
         }
         return batchResult;
+    }
+
+    public void adjust(BatchResult batchResult, double learningRate){
+        var weightInputs = batchResult.getWeightInputs();
+        var weightErrors = batchResult.getWeightErrors();
+
+        assert weightInputs.size() == weightErrors.size();
+        assert weightInputs.size() == weights.size();
+
+        for (int i = 0; i < weights.size(); i++) {
+            Matrix weight = weights.get(i);
+            Matrix bias = biases.get(i);
+            Matrix error = weightErrors.get(i);
+            Matrix input = weightInputs.get(i);
+
+            assert weight.getCols() == input.getRows();
+            Matrix weightAdjust = error.multiply(input.transpose());
+            Matrix biasAdjust = error.averageColumn();
+            double rate = learningRate/input.getCols();
+
+            weight.modify((index, value) -> value - rate * weightAdjust.get(index) );
+            bias.modify((row, col, value) -> learningRate * biasAdjust.get(row));
+        }
     }
 
     public void runBackwards(BatchResult batchResult, Matrix expected){
@@ -61,6 +108,9 @@ public class Engine {
             switch (transform) {
                 case DENSE:
                     Matrix weight = weightIterator.next();
+
+                    batchResult.addWeightErrors(error);
+
                     if (weightIterator.hasNext() || storeInputError) {
                         error = weight.transpose().multiply(error);
                     }

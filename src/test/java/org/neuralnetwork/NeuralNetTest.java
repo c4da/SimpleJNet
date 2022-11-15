@@ -8,7 +8,67 @@ import java.util.Random;
 
 public class NeuralNetTest extends TestCase {
 
+    @Test
+    public void testTrainEngine(){
+        var inputRows = 5;
+        var cols = 6;
+        var outputRows = 6;
+
+        Matrix input = Util.generateInputMatrix(inputRows, cols);
+        Matrix expected = Util.generateTrainableExpectedMatrix(outputRows, input);
+
+        Engine engine = new Engine();
+        engine.add(Transform.DENSE, 6, inputRows);
+        engine.add(Transform.RELU);
+        engine.add(Transform.DENSE, outputRows);
+        engine.add(Transform.SOFTMAX);
+
+        BatchResult batchResult = engine.runForwards(input);
+        engine.evaluate(batchResult, expected);
+
+        double loss1 = batchResult.getLoss();
+        engine.runBackwards(batchResult, expected);
+        engine.adjust(batchResult, 0.01);
+
+        batchResult = engine.runForwards(input);
+        engine.evaluate(batchResult, expected);
+        double loss2 = batchResult.getLoss();
+        double percentCorrect = batchResult.getPercentCorrect();
+
+        System.out.println(loss1 + " " + loss2);
+        System.out.println(percentCorrect);
+
+    }
+
     private Random random = new Random();
+
+    @Test
+    public void testWeightGradient(){
+
+        int inputRows = 4;
+        int outputRows = 5;
+
+        Matrix input = Util.generateInputMatrix(inputRows, 1);
+        Matrix weights = new Matrix(outputRows, inputRows, i -> random.nextGaussian());
+        Matrix expected = Util.generateExpectedMatrix(outputRows, 1);
+
+        Matrix output = weights.multiply(input).softMax();
+//        Matrix loss = LossFunctions.crossEntropy(expected, output);
+
+        Matrix calculatedError = output.apply((index, value) -> value - expected.get(index));
+
+        Matrix calculatedWeightGradients = calculatedError.multiply(input.transpose());
+
+        Matrix approximatedWeightGradients = Approximator.weightGradient(
+                weights,
+                w -> {
+                    Matrix out = w.multiply(input).softMax();
+                    return LossFunctions.crossEntropy(expected, out);
+                });
+
+        calculatedWeightGradients.setTolerance(1e-2);
+        assertTrue(calculatedWeightGradients.equals(approximatedWeightGradients));
+    }
 
     @Test
     public void testEngine(){
