@@ -11,6 +11,31 @@ public class Util {
         return new Matrix(rows, cols, i-> random.nextGaussian()).softMax();
     }
 
+    public static TrainingMatrixes generateTrainingMatrixes(int inputRows, int outputRows, int cols){
+        Matrix input = new Matrix(inputRows, cols);
+        Matrix output = new Matrix(outputRows, cols);
+
+        for (int col = 0; col < cols; col++) {
+            int radius = random.nextInt(outputRows);
+
+            double[] values = new double[inputRows];
+            double initialRadius = 0;
+            for (int row = 0; row < inputRows; row++) {
+                double value = random.nextGaussian();
+                values[row] = value;
+                initialRadius += value * value;
+            }
+            initialRadius = Math.sqrt(initialRadius);
+
+            for (int row = 0; row < inputRows; row++) {
+                input.set(row, col, values[row] * radius / initialRadius);
+            }
+
+            output.set(radius, col, 1);
+        }
+        return new TrainingMatrixes(input, output);
+    }
+
     public static Matrix generateExpectedMatrix(int rows, int cols){
         Matrix expected = new Matrix(rows, cols, i -> 0);
 

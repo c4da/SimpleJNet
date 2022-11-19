@@ -2,41 +2,54 @@ package org.neuralnetwork;
 
 import junit.framework.TestCase;
 import matrix.Matrix;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Random;
 
-public class NeuralNetTest extends TestCase {
+import static org.junit.Assert.assertTrue;
+
+public class NeuralNetTest {
 
     @Test
     public void testTrainEngine(){
-        var inputRows = 5;
-        var cols = 6;
-        var outputRows = 6;
-
-        Matrix input = Util.generateInputMatrix(inputRows, cols);
-        Matrix expected = Util.generateTrainableExpectedMatrix(outputRows, input);
+        var inputRows = 500;
+        var cols = 32;
+        var outputRows = 3;
 
         Engine engine = new Engine();
-        engine.add(Transform.DENSE, 6, inputRows);
+        engine.add(Transform.DENSE, 100, inputRows);
         engine.add(Transform.RELU);
         engine.add(Transform.DENSE, outputRows);
         engine.add(Transform.SOFTMAX);
 
-        BatchResult batchResult = engine.runForwards(input);
-        engine.evaluate(batchResult, expected);
+        RunningAverages runningAverages = new RunningAverages(2, 2, ((callNumber, averages) -> {
+//            assertTrue(averages[0] < 6);
+            System.out.printf("%d. Loss: %.3f -- Percent correct: %.2f\n", callNumber, averages[0], averages[1]);
+        }));
 
-        double loss1 = batchResult.getLoss();
-        engine.runBackwards(batchResult, expected);
-        engine.adjust(batchResult, 0.01);
+//        System.exit(0);
 
-        batchResult = engine.runForwards(input);
-        engine.evaluate(batchResult, expected);
-        double loss2 = batchResult.getLoss();
-        double percentCorrect = batchResult.getPercentCorrect();
+        double initialLearningRate = 0.02;
+        double learningRate = initialLearningRate;
+        double iterations = 2000;
 
-        System.out.println(loss1 + " " + loss2);
-        System.out.println(percentCorrect);
+        for (int i = 0; i < iterations; i++) {
+            var trainingMatrixes = Util.generateTrainingMatrixes(inputRows, outputRows, cols);
+            var input = trainingMatrixes.getInput();
+            var expected =trainingMatrixes.getOutput();
+
+            BatchResult batchResult = engine.runForwards(input);
+            engine.runBackwards(batchResult, expected);
+            engine.adjust(batchResult, learningRate);
+            engine.evaluate(batchResult, expected);
+
+            runningAverages.add(batchResult.getLoss(), batchResult.getPercentCorrect());
+
+            double learningRateDecrease = initialLearningRate / iterations;
+
+            learningRate -= learningRateDecrease;
+        }
 
     }
 
@@ -223,7 +236,7 @@ public class NeuralNetTest extends TestCase {
             if (expectedValue < 1e-3){
                 assertTrue(Math.abs(resultValue) < 1e-2);
             } else {
-                assertTrue(Math.abs(resultValue + 1.0/value) < 1e-2);
+                assertTrue(Math.abs(resultValue + 1.0 / value) < 1e-2);
             }
         });
 

@@ -54,7 +54,7 @@ public class Engine {
                 batchResult.addWeightInput(output);
                 Matrix weight = weights.get(denseIndex);
                 Matrix bias = biases.get(denseIndex);
-                output = weight.multiply(output).modify((row, col, value) -> value + bias.get(row));;
+                output = weight.multiply(output).modify((row, col, value) -> value + bias.get(row));
                 ++denseIndex;
             } else if (t == Transform.RELU) {
                 output = output.modify(value -> value > 0 ? value : 0);
@@ -74,18 +74,19 @@ public class Engine {
         assert weightInputs.size() == weights.size();
 
         for (int i = 0; i < weights.size(); i++) {
-            Matrix weight = weights.get(i);
-            Matrix bias = biases.get(i);
-            Matrix error = weightErrors.get(i);
-            Matrix input = weightInputs.get(i);
+            var weight = weights.get(i);
+            var bias = biases.get(i);
+            var error = weightErrors.get(i);
+            var input = weightInputs.get(i);
 
             assert weight.getCols() == input.getRows();
-            Matrix weightAdjust = error.multiply(input.transpose());
-            Matrix biasAdjust = error.averageColumn();
+            var weightAdjust = error.multiply(input.transpose());
+            var biasAdjust = error.averageColumn();
+
             double rate = learningRate/input.getCols();
 
             weight.modify((index, value) -> value - rate * weightAdjust.get(index) );
-            bias.modify((row, col, value) -> learningRate * biasAdjust.get(row));
+            bias.modify((row, col, value) -> value - learningRate * biasAdjust.get(row));
         }
     }
 

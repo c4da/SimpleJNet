@@ -8,7 +8,7 @@ public class Approximator {
 
     public static Matrix gradient(Matrix input, Function<Matrix, Matrix> transform){
 
-        final double INC = 1e-6;
+        final double INC = 1e-8;
         Matrix loss1 = transform.apply(input);
 
         assert loss1.getCols() == input.getCols():"Input/loss columns not equal";
@@ -31,7 +31,7 @@ public class Approximator {
 
     public static Matrix weightGradient(Matrix weights, Function<Matrix, Matrix> transform){
 
-        final double INC = 1e-6;
+        final double INC = 1e-8;
         Matrix loss1 = transform.apply(weights);
 
         Matrix result = new Matrix(weights.getRows(), weights.getCols(), i -> 0);
