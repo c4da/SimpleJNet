@@ -1,4 +1,4 @@
-package matrix;
+package org.neuralnetwork.matrix;
 
 import java.util.Arrays;
 
@@ -9,7 +9,7 @@ public class Matrix {
         this.tolerance = tolerance;
     }
 
-    private double tolerance = 1e-6;
+    private double tolerance = 1e-4;
     private final int rows;
     private final int cols;
     public interface Producer{
@@ -95,6 +95,17 @@ public class Matrix {
         }
     }
 
+    public Matrix(int rows, int cols, double[] values){
+
+        this.rows = rows;
+        this.cols = cols;
+
+        Matrix tmp = new Matrix(cols, rows);
+        tmp.a = values;
+        Matrix transposed = tmp.transpose();
+        a = transposed.a;
+    }
+
     public Matrix apply(IndexValueProducer producer){
         Matrix result = new Matrix(rows, cols);
 
@@ -110,7 +121,6 @@ public class Matrix {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 a[index] = producer.produce(i, j, a[index]);
-
                 ++index;
             }
         }
@@ -168,6 +178,14 @@ public class Matrix {
         }
 
         return result;
+    }
+
+    public double sum(){
+        double sum = 0;
+        for(var v:a){
+            sum += v;
+        }
+        return sum;
     }
 
     public Matrix getGreatestRowNumbers(){

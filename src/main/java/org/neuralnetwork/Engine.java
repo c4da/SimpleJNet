@@ -1,6 +1,6 @@
 package org.neuralnetwork;
 
-import matrix.Matrix;
+import org.neuralnetwork.matrix.Matrix;
 
 import java.util.LinkedList;
 import java.util.Random;

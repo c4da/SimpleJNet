@@ -4,7 +4,7 @@ package org.neuralnetwork;
  * Hello world!
  *
  */
-public class App 
+public class NeuronsApp
 {
 
     static double neuron(double[] x, double[] w, double b){

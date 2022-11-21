@@ -1,6 +1,6 @@
 package org.neuralnetwork;
 
-import matrix.Matrix;
+import org.neuralnetwork.matrix.Matrix;
 
 import java.util.Random;
 
@@ -12,28 +12,39 @@ public class Util {
     }
 
     public static TrainingMatrixes generateTrainingMatrixes(int inputRows, int outputRows, int cols){
-        Matrix input = new Matrix(inputRows, cols);
-        Matrix output = new Matrix(outputRows, cols);
+        var io = generateTrainingArrays(inputRows, outputRows, cols);
+        Matrix input = new Matrix(inputRows, cols, io.getInput());
+        Matrix output = new Matrix(outputRows, cols, io.getOutput());
 
-        for (int col = 0; col < cols; col++) {
-            int radius = random.nextInt(outputRows);
+        return new TrainingMatrixes(input, output);
+    }
 
-            double[] values = new double[inputRows];
+    public static TrainingArrays generateTrainingArrays(int inputSize, int outputSize, int numberItems){
+        double[] input = new double[inputSize * numberItems];
+        double[] output = new double[outputSize * numberItems];
+
+        int inputPos = 0;
+        int outputPos =0;
+
+        for (int col = 0; col < numberItems; col++) {
+            int radius = random.nextInt(outputSize);
+
+            double[] values = new double[inputSize];
             double initialRadius = 0;
-            for (int row = 0; row < inputRows; row++) {
+            for (int row = 0; row < inputSize; row++) {
                 double value = random.nextGaussian();
                 values[row] = value;
                 initialRadius += value * value;
             }
             initialRadius = Math.sqrt(initialRadius);
 
-            for (int row = 0; row < inputRows; row++) {
-                input.set(row, col, values[row] * radius / initialRadius);
+            for (int row = 0; row < inputSize; row++) {
+                input[inputPos++] = values[row] * radius / initialRadius;
             }
-
-            output.set(radius, col, 1);
+            output[outputPos + radius] = 1;
+            outputPos += outputSize;
         }
-        return new TrainingMatrixes(input, output);
+        return new TrainingArrays(input, output);
     }
 
     public static Matrix generateExpectedMatrix(int rows, int cols){

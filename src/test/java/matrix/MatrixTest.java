@@ -1,6 +1,7 @@
 package matrix;
 
 import org.junit.Test;
+import org.neuralnetwork.matrix.Matrix;
 
 import java.util.Random;
 
@@ -26,14 +27,16 @@ public class MatrixTest {
 
     @Test
     public void testAverageColumn(){
-        int rows = 3;
-        int cols = 4;
+        int rows = 7;
+        int cols = 5;
 
         Matrix m = new Matrix(rows, cols, i -> 2 * i - 3);
 
         double averageIndex = (cols - 1)/2.0;
+
         Matrix expected = new Matrix(rows, 1);
-        expected.modify((row, col, value) -> 2 * (row * col + averageIndex) - 3);
+        expected.modify((row, col, value) -> 2 * (row * cols + averageIndex) - 3);
+
         Matrix result = m.averageColumn();
 
         System.out.println(result);
@@ -152,13 +155,14 @@ public class MatrixTest {
 
     @Test
     public void testMultiplyDouble(){
-        Matrix expected = new Matrix(3, 4, i -> 0.5 * (i - 6));
-        double x = .5;
+        Matrix m = new Matrix(3, 4, i -> 0.5 * (i - 6));
+        double x = 0.5;
 
-        Matrix m = new Matrix(3, 4, i -> x * 0.5 * (i - 6));
+        Matrix expected = new Matrix(3, 4, i -> x * 0.5 * (i - 6));
         Matrix result = m.apply((index, value) -> x * value);
 
         System.out.println(result);
+        System.out.println(expected);
 
         assertTrue(result.equals(expected));
         assertTrue(Math.abs(result.get(1) + 1.25) < 1e-4);

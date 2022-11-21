@@ -1,8 +1,6 @@
 package org.neuralnetwork;
 
-import junit.framework.TestCase;
-import matrix.Matrix;
-import org.junit.Assert;
+import org.neuralnetwork.matrix.Matrix;
 import org.junit.Test;
 
 import java.util.Random;

@@ -1,6 +1,6 @@
 package org.neuralnetwork;
 
-import matrix.Matrix;
+import org.neuralnetwork.matrix.Matrix;
 
 public class LossFunctions {
     public static Matrix crossEntropy(Matrix expected, Matrix actual) {

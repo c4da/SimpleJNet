@@ -1,4 +1,4 @@
-package calculus;
+package org.neuralnetwork.calculus;
 
 import java.util.function.DoubleFunction;
 

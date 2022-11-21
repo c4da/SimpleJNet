@@ -1,6 +1,6 @@
 package org.neuralnetwork;
 
-import matrix.Matrix;
+import org.neuralnetwork.matrix.Matrix;
 
 public class TrainingMatrixes {
     private Matrix input;
