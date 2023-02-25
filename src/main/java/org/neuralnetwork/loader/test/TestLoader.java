@@ -50,7 +50,7 @@ public class TestLoader implements org.neuralnetwork.loader.Loader {
     }
 
     @Override
-    public BatchData readBatch() {
+    public synchronized BatchData readBatch() {
 
         if (totalItemsRead == numberItems){
             return null;

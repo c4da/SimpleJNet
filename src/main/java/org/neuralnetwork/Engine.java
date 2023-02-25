@@ -2,14 +2,23 @@ package org.neuralnetwork;
 
 import org.neuralnetwork.matrix.Matrix;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class Engine {
+public class Engine implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -1028100640159195957L;
     private LinkedList<Transform> transforms = new LinkedList<>();
     private LinkedList<Matrix> weights = new LinkedList<>();
     private LinkedList<Matrix> biases = new LinkedList<>();
     private LossFunction lossFunction = LossFunction.CROSS_ENTROPY;
+
+    private double scaleInitialWeights = 1;
+    public void setScaleInitialWeights(double scale){
+        this.scaleInitialWeights = scale;
+    }
 
     public boolean isStoreInputError() {
         return storeInputError;
@@ -141,7 +150,7 @@ public class Engine {
                     (int) params[1] : weights.getLast().getRows();
 
             Matrix weight = new Matrix(numberNeurons, weightsPerNeuron,
-                    i -> random.nextGaussian());
+                    i -> scaleInitialWeights * random.nextGaussian());
 
             Matrix bias = new Matrix(numberNeurons, 1,
                     i -> random.nextGaussian());
@@ -155,6 +164,8 @@ public class Engine {
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Scale initial weights: %.3f\n", scaleInitialWeights));
+        sb.append("\nTransforms:\n");
         int weightIndex = 0;
         for (var t : transforms) {
             sb.append(t);

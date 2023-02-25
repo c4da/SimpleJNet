@@ -1,8 +1,12 @@
 package org.neuralnetwork.matrix;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class Matrix {
+public class Matrix implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -1339504748649701349L;
     private static final String NUMBER_FORMAT = "%+12.5f ";
 
     public void setTolerance(double tolerance) {
@@ -12,6 +16,11 @@ public class Matrix {
     private double tolerance = 1e-4;
     private final int rows;
     private final int cols;
+
+    public double[] get() {
+        return a;
+    }
+
     public interface Producer{
         double produce(int index);
     }
